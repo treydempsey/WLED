@@ -244,12 +244,12 @@ void handleNotifications()
     if (realtimeOverride) return;
 
     tpmPacketCount++; //increment the packet count
-    if (tpmPacketCount == 1) tpmPayloadFrameSize = (udpIn[2] << 8) + udpIn[3]; //save frame size for the whole payload if this is the first packet
     byte packetNum = udpIn[4]; //starts with 1!
     byte numPackets = udpIn[5];
 
-    uint16_t id = (tpmPayloadFrameSize/3)*(packetNum-1); //start LED
-    for (uint16_t i = 6; i < tpmPayloadFrameSize + 4; i += 3)
+    uint16_t tpmLedCount = ((udpIn[2] << 8) + udpIn[3])/3;
+    uint16_t id = tpmLedOffset + tpmLedCount;
+    for (uint16_t i = 6; i < tpmLedCount + 4; i += 3)
     {
       if (id < ledCount)
       {
@@ -261,7 +261,12 @@ void handleNotifications()
     if (tpmPacketCount == numPackets) //reset packet count and show if all packets were received
     {
       tpmPacketCount = 0;
+      tpmLedOffset = 0;
       strip.show();
+    }
+    else
+    {
+      tpmLedOffset = id;
     }
     return;
   }
